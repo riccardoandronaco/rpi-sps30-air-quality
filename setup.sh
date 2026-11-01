@@ -33,10 +33,10 @@ fi
 echo "→ Creating Python virtual environment…"
 python3 -m venv "${REPO_DIR}/.venv"
 source "${REPO_DIR}/.venv/bin/activate"
-pip install --upgrade pip -q
+pip install --upgrade pip setuptools wheel -q
 # -e . installs the project as an editable package so `collector`, `api`,
 # and `alerts` are importable from anywhere in the venv
-pip install -e "${REPO_DIR}" -q
+pip install -e "${REPO_DIR}"
 deactivate
 echo "   venv ready at ${REPO_DIR}/.venv"
 
