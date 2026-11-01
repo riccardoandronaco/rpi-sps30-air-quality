@@ -31,14 +31,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger("scheduler")
 
+def _parse_env(key: str, default: str) -> str:
+    raw = os.getenv(key, default)
+    # Strip any inline comments (e.g. from systemd EnvironmentFile) and trailing whitespace
+    return raw.split("#")[0].strip() or default
+
+
 # ── Configuration (overridable via environment variables) ──────────────────────
-INTERVAL_SECONDS = int(os.getenv("COLLECTION_INTERVAL", "60"))  # default: 1 reading/min
-WARMUP_SECONDS   = int(os.getenv("SENSOR_WARMUP", "5"))
-DB_PATH          = os.getenv("DB_PATH", "")          # empty = default path
+INTERVAL_SECONDS = int(_parse_env("COLLECTION_INTERVAL", "60"))
+WARMUP_SECONDS   = int(_parse_env("SENSOR_WARMUP", "5"))
+DB_PATH          = _parse_env("DB_PATH", "")
 
 # WHO PM2.5 alert threshold (µg/m³)
-PM25_ALERT_THRESHOLD  = float(os.getenv("PM25_ALERT_THRESHOLD", "25.0"))
-PM10_ALERT_THRESHOLD  = float(os.getenv("PM10_ALERT_THRESHOLD", "50.0"))
+PM25_ALERT_THRESHOLD  = float(_parse_env("PM25_ALERT_THRESHOLD", "25.0"))
+PM10_ALERT_THRESHOLD  = float(_parse_env("PM10_ALERT_THRESHOLD", "50.0"))
 
 # ── Global state ───────────────────────────────────────────────────────────────
 _running = True
