@@ -1,0 +1,33 @@
+{
+  // Python interpreter: usa il venv locale se esiste, altrimenti Python di sistema
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv-dev/Scripts/python.exe",
+
+  // Pylance/Pyright: punta agli stubs per i moduli Linux-only (sps30, smbus2)
+  "python.analysis.stubPath": "${workspaceFolder}/stubs",
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.ignore": [],
+
+  // Non segnalare come errore i moduli mancanti (sps30/smbus2 sono Linux-only)
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingModuleSource": "none",
+    "reportMissingImports": "warning"
+  },
+
+  // Formattazione
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.tabSize": 4
+  },
+
+  // Escludere dalla ricerca file pesanti
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.venv": true,
+    "**/.venv-dev": true,
+    "**/data/*.db": true,
+    "**/data/*.log": true
+  }
+}
+

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌬️ Air Quality Monitor – SPS30</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    :root[data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3350;
+      --text:      #e8eaf6;
+      --text-dim:  #8892b0;
+      --accent:    #7c83ff;
+      --good:      #4caf87;
+      --moderate:  #f5b942;
+      --unhealthy: #f5724b;
+      --danger:    #e53e3e;
+    }
+    :root[data-theme="light"] {
+      --bg:        #f4f6fb;
+      --surface:   #ffffff;
+      --surface2:  #eef0f8;
+      --border:    #dde1f0;
+      --text:      #1a1d27;
+      --text-dim:  #666d8e;
+      --accent:    #5c64e8;
+      --good:      #2e7d5e;
+      --moderate:  #c08b00;
+      --unhealthy: #c0440a;
+      --danger:    #b91c1c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    header h1 span { color: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    .last-update {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* Theme toggle */
+    .theme-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.75rem;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .theme-btn:hover { background: var(--border); }
+
+    /* Cards grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      transition: background 0.3s;
+    }
+
+    .card-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .card-value {
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .card-unit {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    /* AQI badge */
+    .aqi-badge {
+      display: inline-block;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-top: 0.2rem;
+    }
+    .aqi-good        { background: #1a3d2f; color: #4caf87; }
+    .aqi-moderate    { background: #3d3010; color: #f5b942; }
+    .aqi-sensitive   { background: #3d2010; color: #f5924b; }
+    .aqi-unhealthy   { background: #3d1010; color: #f5724b; }
+    .aqi-very        { background: #5c0a0a; color: #ff4444; }
+    [data-theme="light"] .aqi-good      { background: #d4f0e3; color: #1b6b44; }
+    [data-theme="light"] .aqi-moderate  { background: #fef3c7; color: #92400e; }
+    [data-theme="light"] .aqi-sensitive { background: #fde8d8; color: #c2410c; }
+    [data-theme="light"] .aqi-unhealthy { background: #fee2e2; color: #b91c1c; }
+    [data-theme="light"] .aqi-very      { background: #fecaca; color: #991b1b; }
+
+    /* Range selector */
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .range-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem 1.1rem;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .range-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .range-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Chart container */
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .chart-card h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .chart-wrap { position: relative; height: 260px; }
+
+    /* Stats table */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .stat-card h3 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-key { color: var(--text-dim); }
+    .stat-val { font-weight: 600; }
+
+    /* Loading / error */
+    .loading { color: var(--text-dim); font-size: 0.9rem; text-align: center; padding: 2rem; }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 1rem 0.75rem; }
+      .card-value { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌬️ Air Quality <span>Monitor</span></h1>
+  <div class="header-right">
+    <span class="last-update" id="last-update">–</span>
+    <button class="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  </div>
+</header>
+
+<!-- Current readings -->
+<div class="cards-grid" id="current-cards">
+  <div class="card"><div class="card-label">PM1.0</div><div class="card-value" id="v-pm1">–</div><div class="card-unit">µg/m³</div></div>
+  <div class="card"><div class="card-label">PM2.5</div><div class="card-value" id="v-pm25">–</div><div class="card-unit">µg/m³</div></div>
+  <div class="card"><div class="card-label">PM4.0</div><div class="card-value" id="v-pm4">–</div><div class="card-unit">µg/m³</div></div>
+  <div class="card"><div class="card-label">PM10</div><div class="card-value" id="v-pm10">–</div><div class="card-unit">µg/m³</div></div>
+  <div class="card"><div class="card-label">Typical Size</div><div class="card-value" id="v-size">–</div><div class="card-unit">µm</div></div>
+  <div class="card" style="justify-content:center;align-items:center;">
+    <div class="card-label" style="text-align:center">AQI (PM2.5)</div>
+    <div id="aqi-badge" class="aqi-badge" style="margin-top:0.5rem">–</div>
+  </div>
+</div>
+
+<!-- Range selector -->
+<div class="controls">
+  <button class="range-btn active" data-range="day"  onclick="setRange('day')">📅 24 ore</button>
+  <button class="range-btn"        data-range="week" onclick="setRange('week')">📆 7 giorni</button>
+  <button class="range-btn"        data-range="month" onclick="setRange('month')">🗓️ 30 giorni</button>
+</div>
+
+<!-- Chart -->
+<div class="chart-card">
+  <h2>Particolato – Andamento temporale</h2>
+  <div class="chart-wrap">
+    <canvas id="pmChart"></canvas>
+  </div>
+</div>
+
+<!-- Stats -->
+<div id="stats-section" class="stats-grid"></div>
+
+<footer>Raspberry Pi 3B+ · Sensirion SPS30 · dati ogni 60 s · <a href="/docs" style="color:var(--accent)">API docs</a></footer>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────────
+  let currentRange = 'day';
+  let pmChart = null;
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    html.dataset.theme = next;
+    document.querySelector('.theme-btn').textContent = next === 'dark' ? '☀️ Light' : '🌙 Dark';
+    if (pmChart) updateChartTheme();
+    localStorage.setItem('theme', next);
+  }
+
+  function applyStoredTheme() {
+    const stored = localStorage.getItem('theme');
+    if (stored) { document.documentElement.dataset.theme = stored; }
+    const btn = document.querySelector('.theme-btn');
+    btn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  }
+
+  // ── AQI helpers ───────────────────────────────────────────────────────────
+  function aqiCategory(pm25) {
+    if (pm25 === null || pm25 === undefined) return { label: '–', cls: '' };
+    if (pm25 < 15)  return { label: 'Buona',           cls: 'aqi-good' };
+    if (pm25 < 25)  return { label: 'Moderata',        cls: 'aqi-moderate' };
+    if (pm25 < 50)  return { label: 'Sensibile',       cls: 'aqi-sensitive' };
+    if (pm25 < 75)  return { label: 'Non salutare',    cls: 'aqi-unhealthy' };
+    return           { label: 'Molto pericolosa',       cls: 'aqi-very' };
+  }
+
+  // ── Latest reading ────────────────────────────────────────────────────────
+  async function loadLatest() {
+    try {
+      const r = await fetch('/api/latest');
+      if (!r.ok) { document.getElementById('last-update').textContent = 'Nessun dato'; return; }
+      const d = await r.json();
+
+      document.getElementById('v-pm1').textContent  = d.pm1p0  ?? '–';
+      document.getElementById('v-pm25').textContent = d.pm2p5  ?? '–';
+      document.getElementById('v-pm4').textContent  = d.pm4p0  ?? '–';
+      document.getElementById('v-pm10').textContent = d.pm10p0 ?? '–';
+      document.getElementById('v-size').textContent = d.typical_size ?? '–';
+
+      const aqi = aqiCategory(d.pm2p5);
+      const badge = document.getElementById('aqi-badge');
+      badge.textContent = aqi.label;
+      badge.className = `aqi-badge ${aqi.cls}`;
+
+      const ts = new Date(d.timestamp);
+      document.getElementById('last-update').textContent =
+        'Aggiornato: ' + ts.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { console.warn('latest error', e); }
+  }
+
+  // ── Chart ─────────────────────────────────────────────────────────────────
+  function chartColors() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    return {
+      grid:   dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)',
+      text:   dark ? '#8892b0' : '#666d8e',
+      pm25:   '#7c83ff',
+      pm10:   '#4caf87',
+      pm1:    '#f5b942',
+    };
+  }
+
+  function initChart() {
+    const ctx = document.getElementById('pmChart').getContext('2d');
+    const c = chartColors();
+    pmChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'PM2.5 (µg/m³)',
+            data: [],
+            borderColor: c.pm25,
+            backgroundColor: c.pm25 + '22',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.3,
+          },
+          {
+            label: 'PM10 (µg/m³)',
+            data: [],
+            borderColor: c.pm10,
+            backgroundColor: c.pm10 + '22',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.3,
+          },
+          {
+            label: 'PM1.0 (µg/m³)',
+            data: [],
+            borderColor: c.pm1,
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            pointRadius: 0,
+            fill: false,
+            tension: 0.3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: c.text, font: { family: 'Inter', size: 12 }, boxWidth: 16 } },
+          tooltip: {
+            backgroundColor: '#1a1d27',
+            titleColor: '#e8eaf6',
+            bodyColor: '#8892b0',
+            borderColor: '#2e3350',
+            borderWidth: 1,
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} µg/m³`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { tooltipFormat: 'dd/MM HH:mm', displayFormats: { hour: 'HH:mm', day: 'dd/MM' } },
+            grid: { color: c.grid },
+            ticks: { color: c.text, maxTicksLimit: 8, font: { size: 11 } },
+          },
+          y: {
+            min: 0,
+            grid: { color: c.grid },
+            ticks: { color: c.text, font: { size: 11 }, callback: v => v + ' µg' },
+          },
+        },
+      },
+    });
+  }
+
+  function updateChartTheme() {
+    const c = chartColors();
+    pmChart.data.datasets[0].borderColor = c.pm25;
+    pmChart.data.datasets[0].backgroundColor = c.pm25 + '22';
+    pmChart.data.datasets[1].borderColor = c.pm10;
+    pmChart.data.datasets[1].backgroundColor = c.pm10 + '22';
+    pmChart.data.datasets[2].borderColor = c.pm1;
+    pmChart.options.plugins.legend.labels.color = c.text;
+    pmChart.options.scales.x.grid.color = c.grid;
+    pmChart.options.scales.x.ticks.color = c.text;
+    pmChart.options.scales.y.grid.color = c.grid;
+    pmChart.options.scales.y.ticks.color = c.text;
+    pmChart.update();
+  }
+
+  // ── Data loading ──────────────────────────────────────────────────────────
+  async function loadData(range) {
+    try {
+      const tsKey = range === 'day' ? 'timestamp' : 'bucket';
+      const [dataRes, statsRes] = await Promise.all([
+        fetch(`/api/data?range=${range}`),
+        fetch(`/api/stats?range=${range}`),
+      ]);
+      const dataJson  = await dataRes.json();
+      const statsJson = await statsRes.json();
+      const rows = dataJson.data || [];
+
+      // Update chart
+      pmChart.data.datasets[0].data = rows.map(r => ({ x: r[tsKey], y: r.pm2p5 }));
+      pmChart.data.datasets[1].data = rows.map(r => ({ x: r[tsKey], y: r.pm10p0 }));
+      pmChart.data.datasets[2].data = rows.map(r => ({ x: r[tsKey], y: r.pm1p0 }));
+      pmChart.update('active');
+
+      // Render stats
+      renderStats(statsJson);
+    } catch (e) { console.error('loadData error', e); }
+  }
+
+  function renderStats(statsJson) {
+    const s = statsJson.stats || {};
+    const metrics = [
+      { key: 'pm1p0',  label: 'PM1.0',        unit: 'µg/m³' },
+      { key: 'pm2p5',  label: 'PM2.5',        unit: 'µg/m³' },
+      { key: 'pm10p0', label: 'PM10',         unit: 'µg/m³' },
+      { key: 'typical_size', label: 'Dim. tipica', unit: 'µm' },
+    ];
+    const sec = document.getElementById('stats-section');
+    sec.innerHTML = metrics.map(m => {
+      const v = s[m.key];
+      if (!v) return '';
+      return `
+        <div class="stat-card">
+          <h3>${m.label} – ${m.unit}</h3>
+          <div class="stat-row"><span class="stat-key">Min</span><span class="stat-val">${v.min}</span></div>
+          <div class="stat-row"><span class="stat-key">Media</span><span class="stat-val">${v.avg}</span></div>
+          <div class="stat-row"><span class="stat-key">Max</span><span class="stat-val">${v.max}</span></div>
+          <div class="stat-row"><span class="stat-key">Rilevamenti</span><span class="stat-val">${statsJson.count}</span></div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Range selector ────────────────────────────────────────────────────────
+  function setRange(range) {
+    currentRange = range;
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', b.dataset.range === range));
+    loadData(range);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  applyStoredTheme();
+  initChart();
+  loadLatest();
+  loadData(currentRange);
+
+  // Auto-refresh every 60s
+  setInterval(() => { loadLatest(); loadData(currentRange); }, 60_000);
+</script>
+</body>
+</html>
+

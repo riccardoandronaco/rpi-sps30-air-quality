@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Data (do not commit collected data)
+data/
+*.db
+*.log
+
+# Environment (secrets)
+.env
+
+# Editor
+# .vscode/ is intentionally tracked (contains project settings for the team)
+.idea/
+
+# Local dev venv (Windows only, not needed on the Pi)
+.venv-dev/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

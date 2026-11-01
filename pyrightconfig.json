@@ -1,0 +1,12 @@
+{
+  "include": ["collector", "api", "alerts"],
+  "exclude": ["**/__pycache__", ".venv"],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.11",
+  "reportMissingModuleSource": "none",
+  "reportMissingImports": "warning",
+  "reportAttributeAccessIssue": "warning",
+  "stubPath": "stubs",
+  "useLibraryCodeForTypes": true
+}
+

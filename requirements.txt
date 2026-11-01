@@ -1,0 +1,9 @@
+sps30>=0.1.1
+smbus2>=0.4.3
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-dotenv>=1.0.0
+
+# Install the project itself as an editable package (fixes module imports)
+-e .
+

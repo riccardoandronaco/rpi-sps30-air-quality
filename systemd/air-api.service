@@ -1,0 +1,20 @@
+[Unit]
+Description=SPS30 Air Quality API + Dashboard
+Documentation=https://github.com/YOUR_USERNAME/rpi-sps30-air-quality
+After=network.target air-collector.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/rpi-sps30-air-quality
+EnvironmentFile=/home/pi/rpi-sps30-air-quality/.env
+ExecStart=/home/pi/rpi-sps30-air-quality/.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

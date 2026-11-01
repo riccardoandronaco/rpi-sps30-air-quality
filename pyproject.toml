@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "rpi-sps30-air-quality"
+version = "1.0.0"
+description = "Air quality monitor for Raspberry Pi using Sensirion SPS30"
+requires-python = ">=3.9"
+dependencies = [
+    "sps30>=0.1.1",
+    "smbus2>=0.4.3",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["collector*", "api*", "alerts*"]
+
