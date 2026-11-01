@@ -102,17 +102,18 @@ class SPS30Sensor:
                 return None
 
             v = self._sps.dict_values
+            typical = v.get("typical", v.get("typical_size", 0.0))
             return AirQualityReading(
-                pm1p0=round(v["pm1p0"], 2),
-                pm2p5=round(v["pm2p5"], 2),
-                pm4p0=round(v["pm4p0"], 2),
-                pm10p0=round(v["pm10p0"], 2),
-                nc0p5=round(v["nc0p5"], 2),
-                nc1p0=round(v["nc1p0"], 2),
-                nc2p5=round(v["nc2p5"], 2),
-                nc4p0=round(v["nc4p0"], 2),
-                nc10p0=round(v["nc10p0"], 2),
-                typical_size=round(v["typical_size"], 2),
+                pm1p0=round(float(v.get("pm1p0", 0.0)), 2),
+                pm2p5=round(float(v.get("pm2p5", 0.0)), 2),
+                pm4p0=round(float(v.get("pm4p0", 0.0)), 2),
+                pm10p0=round(float(v.get("pm10p0", 0.0)), 2),
+                nc0p5=round(float(v.get("nc0p5", 0.0)), 2),
+                nc1p0=round(float(v.get("nc1p0", 0.0)), 2),
+                nc2p5=round(float(v.get("nc2p5", 0.0)), 2),
+                nc4p0=round(float(v.get("nc4p0", 0.0)), 2),
+                nc10p0=round(float(v.get("nc10p0", 0.0)), 2),
+                typical_size=round(float(typical), 2),
             )
         except Exception as exc:
             logger.exception("Error reading SPS30: %s", exc)
