@@ -28,7 +28,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-DB_PATH = os.getenv("DB_PATH", "")
+DB_PATH = os.getenv("DB_PATH", "").strip()
 _db = Database(Path(DB_PATH)) if DB_PATH else Database()
 
 # ── Range presets ──────────────────────────────────────────────────────────────

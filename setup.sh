@@ -42,6 +42,8 @@ echo "   venv ready at ${REPO_DIR}/.venv"
 
 # ── 4. Data directory ─────────────────────────────────────────────────────────
 mkdir -p "${REPO_DIR}/data"
+sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${REPO_DIR}/data"
+chmod -R 775 "${REPO_DIR}/data"
 echo "→ Data directory ready at ${REPO_DIR}/data"
 
 # ── 5. .env file ──────────────────────────────────────────────────────────────

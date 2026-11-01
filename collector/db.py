@@ -16,13 +16,20 @@ DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "air_quality
 
 class Database:
     def __init__(self, db_path: Path = DEFAULT_DB_PATH):
-        self.db_path = Path(db_path)
+        self.db_path = Path(db_path).resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
     def _get_conn(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn = sqlite3.connect(
+            str(self.db_path),
+            timeout=10.0,
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
         conn.row_factory = sqlite3.Row
+        # WAL mode allows concurrent readers and writers without locking errors
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
         return conn
 
     def _init_schema(self):
