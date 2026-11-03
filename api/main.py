@@ -34,7 +34,7 @@ _db = Database(Path(DB_PATH)) if DB_PATH else Database()
 
 # ── Range presets ──────────────────────────────────────────────────────────────
 RANGE_MAP = {
-    "day":   (24,   5),    # last 24h,  5-minute buckets
+    "day":   (24,   15),   # last 24h,  15-minute buckets
     "week":  (24*7, 60),   # last 7d,   1-hour buckets
     "month": (24*30, 360), # last 30d,  6-hour buckets
 }

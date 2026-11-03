@@ -38,7 +38,7 @@ def _parse_env(key: str, default: str) -> str:
 
 
 # ── Configuration (overridable via environment variables) ──────────────────────
-INTERVAL_SECONDS = int(_parse_env("COLLECTION_INTERVAL", "60"))
+INTERVAL_SECONDS = int(_parse_env("COLLECTION_INTERVAL", "900"))  # default: 15 minutes
 WARMUP_SECONDS   = int(_parse_env("SENSOR_WARMUP", "5"))
 DB_PATH          = _parse_env("DB_PATH", "")
 
