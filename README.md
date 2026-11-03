@@ -68,8 +68,9 @@ nano .env
 ```
 
 ```env
-COLLECTION_INTERVAL=60       # secondi tra una lettura e l'altra
+COLLECTION_INTERVAL=900      # secondi tra una lettura (900 = 15 minuti)
 SENSOR_WARMUP=5              # secondi di riscaldamento del sensore
+CAP=20121                    # CAP della tua città per qualità aria esterna accurata
 PM25_ALERT_THRESHOLD=25.0    # soglia alert PM2.5 (µg/m³)
 PM10_ALERT_THRESHOLD=50.0    # soglia alert PM10 (µg/m³)
 TELEGRAM_BOT_TOKEN=          # opzionale: token bot Telegram

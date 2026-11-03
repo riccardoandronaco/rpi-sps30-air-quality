@@ -98,8 +98,24 @@
       padding: 1rem 1.1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
+      gap: 0.35rem;
       transition: background 0.3s;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.15rem;
+    }
+
+    .card-tag {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 0.15rem 0.35rem;
+      font-weight: 500;
     }
 
     .card-label {
@@ -108,6 +124,12 @@
       letter-spacing: 0.06em;
       color: var(--text-dim);
       font-weight: 500;
+    }
+
+    .card-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
     }
 
     .card-value {
@@ -119,6 +141,43 @@
 
     .card-unit {
       font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    /* Embedded outdoor row inside cards */
+    .card-outdoor-sub {
+      margin-top: auto;
+      padding-top: 0.5rem;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      min-height: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .card-outdoor-sub strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .card-outdoor-diff {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+    .diff-better {
+      background: rgba(76, 175, 135, 0.18);
+      color: var(--good);
+    }
+    .diff-worse {
+      background: rgba(245, 114, 75, 0.18);
+      color: var(--unhealthy);
+    }
+    .diff-equal {
+      background: rgba(136, 146, 176, 0.18);
       color: var(--text-dim);
     }
 
@@ -307,49 +366,110 @@
   </div>
 </header>
 
-<!-- Current readings -->
+<!-- Current readings with integrated Indoor/Outdoor comparison -->
 <div class="cards-grid" id="current-cards">
-  <div class="card"><div class="card-label">PM1.0</div><div class="card-value" id="v-pm1">–</div><div class="card-unit">µg/m³</div></div>
-  <div class="card"><div class="card-label">PM2.5</div><div class="card-value" id="v-pm25">–</div><div class="card-unit">µg/m³</div></div>
-  <div class="card"><div class="card-label">PM4.0</div><div class="card-value" id="v-pm4">–</div><div class="card-unit">µg/m³</div></div>
-  <div class="card"><div class="card-label">PM10</div><div class="card-value" id="v-pm10">–</div><div class="card-unit">µg/m³</div></div>
-  <div class="card"><div class="card-label">Typical Size</div><div class="card-value" id="v-size">–</div><div class="card-unit">µm</div></div>
-  <div class="card" style="justify-content:center;align-items:center;">
-    <div class="card-label" style="text-align:center">AQI (PM2.5)</div>
-    <div id="aqi-badge" class="aqi-badge" style="margin-top:0.5rem">–</div>
+  <!-- PM1.0 -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">PM1.0</span>
+      <span class="card-tag">Sensore</span>
+    </div>
+    <div class="card-value-row">
+      <span class="card-value" id="v-pm1">–</span>
+      <span class="card-unit">µg/m³</span>
+    </div>
+    <div class="card-outdoor-sub">
+      <span style="font-size:0.7rem; color:var(--text-dim);">(solo sensore indoor)</span>
+    </div>
+  </div>
+
+  <!-- PM2.5 (with outdoor comparison) -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">PM2.5</span>
+      <span class="card-tag">Indoor</span>
+    </div>
+    <div class="card-value-row">
+      <span class="card-value" id="v-pm25">–</span>
+      <span class="card-unit">µg/m³</span>
+    </div>
+    <div class="card-outdoor-sub">
+      <span>🌳 Est: <strong id="v-pm25-out">–</strong> µg/m³</span>
+      <span id="v-pm25-diff" class="card-outdoor-diff"></span>
+    </div>
+  </div>
+
+  <!-- PM4.0 -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">PM4.0</span>
+      <span class="card-tag">Sensore</span>
+    </div>
+    <div class="card-value-row">
+      <span class="card-value" id="v-pm4">–</span>
+      <span class="card-unit">µg/m³</span>
+    </div>
+    <div class="card-outdoor-sub">
+      <span style="font-size:0.7rem; color:var(--text-dim);">(solo sensore indoor)</span>
+    </div>
+  </div>
+
+  <!-- PM10 (with outdoor comparison) -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">PM10</span>
+      <span class="card-tag">Indoor</span>
+    </div>
+    <div class="card-value-row">
+      <span class="card-value" id="v-pm10">–</span>
+      <span class="card-unit">µg/m³</span>
+    </div>
+    <div class="card-outdoor-sub">
+      <span>🌳 Est: <strong id="v-pm10-out">–</strong> µg/m³</span>
+      <span id="v-pm10-diff" class="card-outdoor-diff"></span>
+    </div>
+  </div>
+
+  <!-- Typical particle size -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">Dim. Tipica</span>
+      <span class="card-tag">Sensore</span>
+    </div>
+    <div class="card-value-row">
+      <span class="card-value" id="v-size">–</span>
+      <span class="card-unit">µm</span>
+    </div>
+    <div class="card-outdoor-sub">
+      <span style="font-size:0.7rem; color:var(--text-dim);">(diametro medio particelle)</span>
+    </div>
+  </div>
+
+  <!-- AQI (with outdoor comparison) -->
+  <div class="card">
+    <div class="card-header-row">
+      <span class="card-label">Qualità Aria</span>
+      <span class="card-tag">Indoor</span>
+    </div>
+    <div style="display:flex; align-items:center; margin: 0.15rem 0;">
+      <div id="aqi-badge" class="aqi-badge">–</div>
+    </div>
+    <div class="card-outdoor-sub">
+      <span>🌳 Est: <strong id="v-aqi-out">–</strong></span>
+    </div>
   </div>
 </div>
 
-<!-- Outdoor environmental air quality (Auto-detected via IP) -->
+<!-- Outdoor environmental air quality bar -->
 <div class="outdoor-banner" id="outdoor-section">
   <div class="outdoor-header">
     <div class="outdoor-title">
       <span>📍 Qualità aria esterna:</span>
-      <span id="outdoor-location" style="color:var(--accent);">Rilevamento in corso...</span>
+      <strong id="outdoor-location" style="color:var(--accent);">Rilevamento in corso...</strong>
     </div>
-    <span class="outdoor-source" id="outdoor-source-label">Rilevamento via IP · Open-Meteo</span>
+    <span class="outdoor-source" id="outdoor-source-label">Dati CAMS · Open-Meteo</span>
   </div>
-  <div class="outdoor-grid">
-    <div class="outdoor-card">
-      <div class="card-label">AQI Esterno (EEA)</div>
-      <div class="card-value" style="font-size: 1.25rem;" id="out-aqi">–</div>
-      <div id="out-aqi-badge" class="aqi-badge" style="margin-top: 0.2rem;">–</div>
-    </div>
-    <div class="outdoor-card">
-      <div class="card-label">PM2.5 Esterno</div>
-      <div class="card-value" style="font-size: 1.25rem;" id="out-pm25">–</div>
-      <div class="card-unit">µg/m³</div>
-    </div>
-    <div class="outdoor-card">
-      <div class="card-label">PM10 Esterno</div>
-      <div class="card-value" style="font-size: 1.25rem;" id="out-pm10">–</div>
-      <div class="card-unit">µg/m³</div>
-    </div>
-    <div class="outdoor-card">
-      <div class="card-label">Confronto Indoor / Outdoor</div>
-      <div id="comparison-badge" class="comparison-pill" style="margin-top: 0.25rem;">In attesa di letture...</div>
-    </div>
-  </div>
+  <div id="comparison-badge" class="comparison-pill">In attesa di dati...</div>
 </div>
 
 <!-- Range selector -->
@@ -444,24 +564,81 @@
   }
 
   function updateComparison() {
-    const compEl = document.getElementById('comparison-badge');
-    if (!compEl || !latestIndoorData || !latestOutdoorData || latestOutdoorData.pm2p5 == null || latestIndoorData.pm2p5 == null) {
-      return;
-    }
-    const inPm = Number(latestIndoorData.pm2p5);
-    const outPm = Number(latestOutdoorData.pm2p5);
+    if (!latestOutdoorData || !latestOutdoorData.available) return;
 
-    if (inPm < outPm) {
-      const diff = Math.round(((outPm - inPm) / Math.max(outPm, 0.1)) * 100);
-      compEl.innerHTML = `🟢 <b>Interno più pulito:</b> -${diff}% PM2.5 rispetto all'esterno`;
-      compEl.style.borderColor = 'var(--good)';
-    } else if (inPm > outPm) {
-      const diff = Math.round(((inPm - outPm) / Math.max(outPm, 0.1)) * 100);
-      compEl.innerHTML = `⚠️ <b>Interno più inquinato:</b> +${diff}% PM2.5 rispetto all'esterno`;
-      compEl.style.borderColor = 'var(--unhealthy)';
-    } else {
-      compEl.innerHTML = `🟡 <b>Valori allineati:</b> PM2.5 interno ed esterno identici`;
-      compEl.style.borderColor = 'var(--border)';
+    const outPm25 = latestOutdoorData.pm2p5 != null ? Number(latestOutdoorData.pm2p5) : null;
+    const outPm10 = latestOutdoorData.pm10p0 != null ? Number(latestOutdoorData.pm10p0) : null;
+    const aqiLabel = latestOutdoorData.european_aqi_label || eeaAqiCategory(latestOutdoorData.european_aqi).label;
+
+    // Update embedded outdoor values inside cards
+    const pm25OutEl = document.getElementById('v-pm25-out');
+    if (pm25OutEl) pm25OutEl.textContent = outPm25 != null ? outPm25 : '–';
+
+    const pm10OutEl = document.getElementById('v-pm10-out');
+    if (pm10OutEl) pm10OutEl.textContent = outPm10 != null ? outPm10 : '–';
+
+    const aqiOutEl = document.getElementById('v-aqi-out');
+    if (aqiOutEl) aqiOutEl.textContent = `${aqiLabel} (${latestOutdoorData.european_aqi ?? '–'})`;
+
+    // Compute diffs if indoor data is present
+    if (latestIndoorData) {
+      const inPm25 = latestIndoorData.pm2p5 != null ? Number(latestIndoorData.pm2p5) : null;
+      const inPm10 = latestIndoorData.pm10p0 != null ? Number(latestIndoorData.pm10p0) : null;
+
+      // PM2.5 diff badge
+      const pm25DiffEl = document.getElementById('v-pm25-diff');
+      if (pm25DiffEl && inPm25 != null && outPm25 != null) {
+        if (inPm25 < outPm25) {
+          const pct = Math.round(((outPm25 - inPm25) / Math.max(outPm25, 0.1)) * 100);
+          pm25DiffEl.textContent = `-${pct}%`;
+          pm25DiffEl.className = 'card-outdoor-diff diff-better';
+          pm25DiffEl.title = `Indoor è più pulito del ${pct}% rispetto all'esterno`;
+        } else if (inPm25 > outPm25) {
+          const pct = Math.round(((inPm25 - outPm25) / Math.max(outPm25, 0.1)) * 100);
+          pm25DiffEl.textContent = `+${pct}%`;
+          pm25DiffEl.className = 'card-outdoor-diff diff-worse';
+          pm25DiffEl.title = `Indoor è più inquinato del ${pct}% rispetto all'esterno`;
+        } else {
+          pm25DiffEl.textContent = `=`;
+          pm25DiffEl.className = 'card-outdoor-diff diff-equal';
+        }
+      }
+
+      // PM10 diff badge
+      const pm10DiffEl = document.getElementById('v-pm10-diff');
+      if (pm10DiffEl && inPm10 != null && outPm10 != null) {
+        if (inPm10 < outPm10) {
+          const pct = Math.round(((outPm10 - inPm10) / Math.max(outPm10, 0.1)) * 100);
+          pm10DiffEl.textContent = `-${pct}%`;
+          pm10DiffEl.className = 'card-outdoor-diff diff-better';
+          pm10DiffEl.title = `Indoor è più pulito del ${pct}% rispetto all'esterno`;
+        } else if (inPm10 > outPm10) {
+          const pct = Math.round(((inPm10 - outPm10) / Math.max(outPm10, 0.1)) * 100);
+          pm10DiffEl.textContent = `+${pct}%`;
+          pm10DiffEl.className = 'card-outdoor-diff diff-worse';
+          pm10DiffEl.title = `Indoor è più inquinato del ${pct}% rispetto all'esterno`;
+        } else {
+          pm10DiffEl.textContent = `=`;
+          pm10DiffEl.className = 'card-outdoor-diff diff-equal';
+        }
+      }
+
+      // General comparison pill
+      const compEl = document.getElementById('comparison-badge');
+      if (compEl && inPm25 != null && outPm25 != null) {
+        if (inPm25 < outPm25) {
+          const diff = Math.round(((outPm25 - inPm25) / Math.max(outPm25, 0.1)) * 100);
+          compEl.innerHTML = `🟢 <b>Aria interna più pulita dell'esterno:</b> -${diff}% PM2.5`;
+          compEl.style.borderColor = 'var(--good)';
+        } else if (inPm25 > outPm25) {
+          const diff = Math.round(((inPm25 - outPm25) / Math.max(outPm25, 0.1)) * 100);
+          compEl.innerHTML = `⚠️ <b>Aria interna più inquinata dell'esterno:</b> +${diff}% PM2.5`;
+          compEl.style.borderColor = 'var(--unhealthy)';
+        } else {
+          compEl.innerHTML = `🟡 <b>Valori allineati:</b> Livelli PM2.5 interno ed esterno identici`;
+          compEl.style.borderColor = 'var(--border)';
+        }
+      }
     }
   }
 
@@ -476,17 +653,9 @@
         document.getElementById('outdoor-location').textContent = d.location_name;
       }
       if (d.available) {
-        document.getElementById('out-aqi').textContent = d.european_aqi ?? '–';
-        const aqiInfo = eeaAqiCategory(d.european_aqi);
-        const badge = document.getElementById('out-aqi-badge');
-        badge.textContent = aqiInfo.label;
-        badge.className = `aqi-badge ${aqiInfo.cls}`;
-
-        document.getElementById('out-pm25').textContent = d.pm2p5 ?? '–';
-        document.getElementById('out-pm10').textContent = d.pm10p0 ?? '–';
         if (d.time) {
           const t = d.time.replace('T', ' ');
-          document.getElementById('outdoor-source-label').textContent = `Aggiornato: ${t} · Open-Meteo`;
+          document.getElementById('outdoor-source-label').textContent = `Dati stazione: ${t} · Open-Meteo`;
         }
         updateComparison();
       } else {

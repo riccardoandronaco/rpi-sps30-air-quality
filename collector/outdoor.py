@@ -41,13 +41,68 @@ class OutdoorAirQuality:
         self._last_fetch_time: float = 0.0
         self._cached_coords: Optional[tuple[float, float, str]] = None
 
-    def get_location_by_ip(self) -> Optional[tuple[float, float, str]]:
+    def resolve_location_by_cap(self, cap: str, country: str = "it") -> Optional[tuple[float, float, str]]:
         """
-        Detect lat, lon and city name from public IP.
-        Checks for manual override in environment variables first:
-          LATITUDE, LONGITUDE, LOCATION_NAME
+        Resolve coordinates and city name from postal code (CAP) without API keys.
+        Primary: api.zippopotam.us
+        Fallback: Nominatim (OpenStreetMap)
         """
-        # Manual override check
+        clean_cap = cap.strip()
+        if not clean_cap:
+            return None
+
+        # 1. Zippopotam.us (super-fast, dedicated postal code DB)
+        try:
+            url = f"https://api.zippopotam.us/{country.lower()}/{clean_cap}"
+            req = urllib.request.Request(url, headers={"User-Agent": "rpi-sps30-monitor/1.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                places = data.get("places", [])
+                if places:
+                    p = places[0]
+                    lat = float(p["latitude"])
+                    lon = float(p["longitude"])
+                    place = p.get("place name", "")
+                    state = p.get("state", "")
+                    loc_name = f"{place} ({clean_cap}), {state}" if state else f"{place} ({clean_cap})"
+                    logger.info("Resolved CAP %s to %s (%.4f, %.4f)", clean_cap, loc_name, lat, lon)
+                    return (lat, lon, loc_name)
+        except Exception as exc:
+            logger.warning("Zippopotam lookup for CAP '%s' failed: %s", clean_cap, exc)
+
+        # 2. Fallback Nominatim (OpenStreetMap)
+        try:
+            url = f"https://nominatim.openstreetmap.org/search?postalcode={clean_cap}&country={country}&format=json&limit=1"
+            req = urllib.request.Request(url, headers={"User-Agent": "rpi-sps30-monitor-geocoder/1.0"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                results = json.loads(resp.read().decode("utf-8"))
+                if results:
+                    r = results[0]
+                    lat = float(r["lat"])
+                    lon = float(r["lon"])
+                    display_name = r.get("display_name", f"CAP {clean_cap}")
+                    # Keep short city part
+                    short_name = display_name.split(",")[0]
+                    loc_name = f"{short_name} ({clean_cap})"
+                    logger.info("Nominatim resolved CAP %s to %s (%.4f, %.4f)", clean_cap, loc_name, lat, lon)
+                    return (lat, lon, loc_name)
+        except Exception as exc:
+            logger.warning("Nominatim lookup for CAP '%s' failed: %s", clean_cap, exc)
+
+        return None
+
+    def get_location(self) -> Optional[tuple[float, float, str]]:
+        """
+        Detect lat, lon and city name with the following priority:
+          1. Explicit LATITUDE and LONGITUDE from .env
+          2. CAP or POSTAL_CODE from .env (e.g. CAP=20121 or CAP=00185)
+          3. Automatic public IP Geolocation (fallback)
+        """
+        # If already resolved and cached, reuse
+        if self._cached_coords is not None:
+            return self._cached_coords
+
+        # 1. Manual coordinates override
         env_lat = os.getenv("LATITUDE", "").strip()
         env_lon = os.getenv("LONGITUDE", "").strip()
         env_loc = os.getenv("LOCATION_NAME", "").strip()
@@ -56,13 +111,25 @@ class OutdoorAirQuality:
                 lat = float(env_lat)
                 lon = float(env_lon)
                 name = env_loc or f"{lat:.2f}, {lon:.2f}"
-                return (lat, lon, name)
+                self._cached_coords = (lat, lon, name)
+                return self._cached_coords
             except ValueError:
                 pass
 
-        # If already resolved earlier and cached, reuse coordinates
-        if self._cached_coords is not None:
-            return self._cached_coords
+        # 2. CAP / Postal Code from .env
+        env_cap = os.getenv("CAP", os.getenv("POSTAL_CODE", "")).strip()
+        env_country = os.getenv("COUNTRY_CODE", "it").strip() or "it"
+        if env_cap:
+            res = self.resolve_location_by_cap(env_cap, env_country)
+            if res:
+                self._cached_coords = res
+                return self._cached_coords
+
+        # 3. Fallback to IP Geolocation
+        return self._get_location_by_ip()
+
+    def _get_location_by_ip(self) -> Optional[tuple[float, float, str]]:
+        """Detect coordinates via public IP."""
 
         # 1. Try ip-api.com (free, 45 req/min, highly accurate)
         try:
@@ -117,7 +184,7 @@ class OutdoorAirQuality:
         if not force_refresh and self._cached_data and (now - self._last_fetch_time < self.CACHE_DURATION):
             return self._cached_data
 
-        loc = self.get_location_by_ip()
+        loc = self.get_location()
         if not loc:
             logger.warning("Unable to determine device location for outdoor air quality")
             return self._cached_data
