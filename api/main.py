@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from collector.db import Database
+from collector.outdoor import outdoor_service
 
 app = FastAPI(
     title="SPS30 Air Quality API",
@@ -113,6 +114,18 @@ def get_stats(range: Literal["day", "week", "month"] = Query("day")):
             "typical_size": stat("typical_size"),
         },
     }
+
+
+@app.get("/api/outdoor")
+def get_outdoor(refresh: bool = False):
+    """
+    Fetch outdoor air quality for the automatically detected sensor location.
+    Cached for 30 minutes. Pass refresh=true to force a new check.
+    """
+    data = outdoor_service.fetch_outdoor_data(force_refresh=refresh)
+    if not data:
+        raise HTTPException(status_code=503, detail="Outdoor data currently unavailable")
+    return data
 
 
 # Serve the web dashboard as static files

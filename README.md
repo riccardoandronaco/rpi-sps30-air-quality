@@ -101,6 +101,7 @@ http://<IP-DEL-RASPBERRY>:8000
 |-------------------|------------------------------------------|
 | `GET /api/health` | Liveness check + conteggio letture       |
 | `GET /api/latest` | Ultima lettura disponibile               |
+| `GET /api/outdoor` | Qualità aria esterna locale (auto via IP) |
 | `GET /api/data?range=day\|week\|month` | Dati storici (aggregati) |
 | `GET /api/stats?range=day\|week\|month` | Statistiche min/avg/max |
 | `GET /docs`       | Documentazione Swagger interattiva       |
